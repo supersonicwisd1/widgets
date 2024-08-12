@@ -36,16 +36,16 @@ enum ReviewState {
   SWAP_PENDING,
 }
 
-function useReviewState(onSwap: () => Promise<void>, allowance: Allowance, approval: SwapApproval, doesTradeDiffer: boolean) {
+function useReviewState(onSwap: () => Promise<void>, allowance: Allowance, approval: SwapApproval | undefined, doesTradeDiffer: boolean) {
   const [currentState, setCurrentState] = useState(ReviewState.REVIEWING)
   const closeDialog = useCloseDialog()
   const permit2Enabled = usePermit2Enabled()
 
   const onStartSwapFlow = useCallback(async () => {
-    if (currentState!== ReviewState.ALLOWING && (allowance.state === AllowanceState.REQUIRED || approval.state === SwapApprovalState.REQUIRES_APPROVAL || approval.state === SwapApprovalState.REQUIRES_SIGNATURE)) {
+    if (currentState!== ReviewState.ALLOWING && (allowance.state === AllowanceState.REQUIRED || approval?.state === SwapApprovalState.REQUIRES_APPROVAL || approval?.state === SwapApprovalState.REQUIRES_SIGNATURE)) {
       setCurrentState(ReviewState.ALLOWING)
       try {
-        await ((allowance as AllowanceRequired).approveAndPermit ?? approval.approve)?.()
+        await ((allowance as AllowanceRequired).approveAndPermit ?? approval?.approve)?.()
       } catch (e) {
         if (e instanceof UserRejectedRequestError) {
           closeDialog?.()
@@ -55,7 +55,7 @@ function useReviewState(onSwap: () => Promise<void>, allowance: Allowance, appro
         }
       }
       // if the user finishes permit2 allowance flow, onStartSwapFlow() will be called again by useEffect below to trigger swap
-    } else if ((permit2Enabled && allowance.state === AllowanceState.ALLOWED) || approval.state === SwapApprovalState.APPROVED) {
+    } else if ((permit2Enabled && allowance.state === AllowanceState.ALLOWED) || approval?.state === SwapApprovalState.APPROVED) {
       // Prevents immediate swap if trade has updated mid permit2 flow
       if (currentState === ReviewState.ALLOWING && doesTradeDiffer) {
         setCurrentState(ReviewState.REVIEWING)
@@ -162,7 +162,7 @@ export function ConfirmButton({
   onConfirm: () => Promise<void>
   triggerImpactSpeedbump: () => boolean
   allowance: Allowance
-  approval:SwapApproval
+  approval?:SwapApproval
 }) {
   const { onSwapPriceUpdateAck, onSubmitSwapClick } = useAtomValue(swapEventHandlersAtom)
   const [ackTrade, setAckTrade] = useState(trade)
@@ -181,7 +181,7 @@ export function ConfirmButton({
   // Used to determine specific message to render while in ALLOWANCE_PROMPTED state
   const [shouldRequestApproval, isApprovalLoading] = useMemo(
     () =>
-      approval.approve ?[false, approval.state === SwapApprovalState.PENDING_APPROVAL || approval.state === SwapApprovalState.PENDING_SIGNATURE] :
+      approval?.approve ?[false, approval?.state === SwapApprovalState.PENDING_APPROVAL || approval?.state === SwapApprovalState.PENDING_SIGNATURE] :
       allowance.state === AllowanceState.REQUIRED
         ? [allowance.shouldRequestApproval, allowance.isApprovalLoading]
         : [false, false],
@@ -210,7 +210,7 @@ export function ConfirmButton({
           'interactive',
         ]
       case ReviewState.ALLOWING:
-        return isApprovalLoading || (!approval.approve && allowance.state === AllowanceState.ALLOWED)
+        return isApprovalLoading || (!approval?.approve && allowance.state === AllowanceState.ALLOWED)
           ? [getApprovalLoadingAction()]
           : [getAllowancePendingAction(shouldRequestApproval, onCancel, trade.inputAmount.currency)]
       case ReviewState.ALLOWANCE_FAILED:
@@ -238,7 +238,7 @@ export function ConfirmButton({
     }
   }, [
     allowance.state,
-    approval.state,
+    approval?.state,
     currentState,
     doesTradeDiffer,
     isApprovalLoading,

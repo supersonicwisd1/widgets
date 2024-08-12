@@ -5,6 +5,7 @@ import {
   defaultTheme,
   DialogAnimationType,
   lightTheme,
+  RouterPreference,
   SupportedChainId,
   SwapWidget,
 } from '@uniswap/widgets'
@@ -115,6 +116,13 @@ function Fixture() {
       width={width}
       routerUrl={routerUrl}
       brandedFooter={brandedFooter}
+      settings={
+        {
+          slippage: { auto: false, max: '0.3' },
+          routerPreference: RouterPreference.API,
+          transactionTtl: 30,
+      }
+      }
       dialogOptions={{
         animationType: dialogAnimation,
         pageCentered,
