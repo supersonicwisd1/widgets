@@ -24,6 +24,16 @@ export function computeRealizedPriceImpact(trade: InterfaceTrade): Percent {
 }
 
 export function getPriceImpactWarning(priceImpact: Percent): 'warning' | 'error' | undefined {
+  // Add defensive check for invalid price impact values
+  if (!priceImpact || priceImpact.isNaN() || !isFinite(priceImpact.toFixed(2))) {
+    return 'error'
+  }
+  
+  // Check for extreme price impact (100% or more) that causes division by zero
+  if (priceImpact.greaterThan(new Percent(100, 100))) {
+    return 'error'
+  }
+  
   if (priceImpact.greaterThan(ALLOWED_PRICE_IMPACT_HIGH)) return 'error'
   if (priceImpact.greaterThan(ALLOWED_PRICE_IMPACT_MEDIUM)) return 'warning'
   return
