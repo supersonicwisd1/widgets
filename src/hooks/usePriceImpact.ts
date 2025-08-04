@@ -16,14 +16,6 @@ export function usePriceImpact(trade?: InterfaceTrade): PriceImpact | undefined 
     try {
       const marketPriceImpact = trade ? computeRealizedPriceImpact(trade) : undefined
       
-      // Add defensive check for invalid price impact
-      if (marketPriceImpact && (marketPriceImpact.isNaN() || !isFinite(marketPriceImpact.toFixed(2)))) {
-        return {
-          percent: marketPriceImpact,
-          warning: 'error',
-        }
-      }
-      
       return marketPriceImpact
         ? {
             percent: marketPriceImpact,
